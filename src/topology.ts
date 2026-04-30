@@ -176,6 +176,7 @@ export class TopologyManager {
         };
         this.epochs.push(newEpoch);
 
+        let failed = 0;
         for (const server of servers) {
             const client = new ValtheraRemote({
                 ...cfg,
@@ -190,10 +191,14 @@ export class TopologyManager {
                     }
                 });
                 console.log("[V-SQR-05-04] Epoch added to server:", server);
-            } catch {
+            } catch (e) {
+                console.error(e);
                 console.log("[V-SQR-05-05] Failed to add epoch to server:", server);
+                failed++;
             }
         }
-        console.log("[V-SQR-05-06] Epoch created successfully:", newEpoch.start, "servers:", newEpoch.serverIds.length);
+        if (failed === servers.length)
+            return console.log("[V-SQR-05-06] Failed to add epoch to all servers");
+        console.log("[V-SQR-05-07] Epoch created successfully:", newEpoch.start, "servers:", newEpoch.serverIds.length);
     }
 }

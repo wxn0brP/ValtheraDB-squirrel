@@ -1,0 +1,7 @@
+services:
+  squirrel:
+    build: .
+    ports:
+      - "14415:14415"
+    env_file:
+      - .env

@@ -1,7 +1,7 @@
 import type { VQuery } from "@wxn0brp/db-core/types/query";
 import { Squirrel } from "../squirrel";
-import { fullScanReq } from "./fullScan";
 import { useBackupServer } from "./backup";
+import { fullScanReq } from "./fullScan";
 
 export function registerDbOp(squirrel: Squirrel) {
     squirrel.app.post("/db/:op", async (req, res) => {
@@ -46,7 +46,7 @@ export function registerDbOp(squirrel: Squirrel) {
 
         if (!isUp) {
             console.log("[V-SQR-06-08] Primary server down, using backup");
-            if (squirrel.config.allowFullScan) {
+            if (squirrel.config.allowBackupServer) {
                 return useBackupServer({
                     squirrel,
                     data,
@@ -62,7 +62,8 @@ export function registerDbOp(squirrel: Squirrel) {
             }
         }
 
-        const redirectUrl = `${target.server.host}db/${req.params.op}`;
+        const host = target.server.host;
+        const redirectUrl = `${host.endsWith("/") ? host : host + "/"}db/${req.params.op}`;
         console.log("[V-SQR-06-09] redirect:", redirectUrl);
         res.redirect(redirectUrl, 307);
     });

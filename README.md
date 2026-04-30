@@ -1,6 +1,28 @@
 # Squirrel
 
-Sharding and routing layer for the ValtheraDB ecosystem.
+ValtheraDB-Squirrel is an AP routing layer over low unreliable storage nodes, with no consistency or durability guarantees.
+
+## How it works
+
+### Routing
+
+Fully compatible with the ValtheraDB server API. Squirrel sits between the client and storage nodes, resolving the target server for each request and responding with a `307` redirect to the correct node.
+
+```
+client -> Squirrel (hash _id -> server) -> 307 redirect -> ValtheraDB node
+```
+
+### Epochs
+
+Timestamped snapshots of the cluster's server list. Documents are routed based on which epoch was active when their `_id` was generated. New epochs are created on first start or when the server list changes.
+
+### AP over CA
+
+When the primary server is down, writes are queued on a backup node in `__squirrel_back`. The original server retrieves them via `POST /__squirrel/get-data` and acknowledges removal via `POST /__squirrel/get-data-ack`.
+
+### Full Scan
+
+When no `_id` is present and `SQUIRREL_ALLOW_FULL_SCAN=true`, Squirrel broadcasts the operation to all servers.
 
 ## Configuration
 

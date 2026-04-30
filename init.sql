@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS `__squirrel` (
+    `_id` VARCHAR(255) NOT NULL,
+    `v` TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `__squirrel_back` (
+    `to` VARCHAR(255) NOT NULL,
+    `data` JSON NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

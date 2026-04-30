@@ -3,7 +3,7 @@ import type { VQuery } from "@wxn0brp/db-core/types/query";
 import { FFResponse } from "@wxn0brp/falcon-frame";
 import { Squirrel } from "../squirrel";
 
-export async function fullScanReq(squirrel: Squirrel, data: VQuery, op: string, res: FFResponse) {
+export async function fullScanReq(squirrel: Squirrel, data: VQuery, op: string, res: FFResponse | false) {
     const servers = [...squirrel.topology.servers.entries()];
     servers.sort((a, b) => a[0].localeCompare(b[0]));
 
@@ -39,10 +39,15 @@ export async function fullScanReq(squirrel: Squirrel, data: VQuery, op: string, 
 
     console.log("[V-SQR-07-05] Full scan completed, total results:", findResult.length);
 
+    const responseData = op === "find" ?
+        findResult : findResult[0] ?
+            findResult[0] : null
+
+    if (!res)
+        return responseData;
+
     res.json({
         err: false,
-        result: op === "find" ?
-            findResult : findResult[0] ?
-                findResult[0] : null
+        result: responseData
     })
 }
