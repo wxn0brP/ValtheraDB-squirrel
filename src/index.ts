@@ -12,7 +12,7 @@ const squirrel = new Squirrel(
     },
     {
         allowFullScan: process.env.SQUIRREL_ALLOW_FULL_SCAN === "true",
-        allowBackupServer: process.env.SQUIRREL_ALLOW_BACKUP_SERVER === "true"
+        allowCatchupServer: process.env.SQUIRREL_ALLOW_CATCHUP_SERVER === "true"
     }
 );
 

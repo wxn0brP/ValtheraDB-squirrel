@@ -1,6 +1,6 @@
 import type { VQuery } from "@wxn0brp/db-core/types/query";
 import { Squirrel } from "../squirrel";
-import { useBackupServer } from "./backup";
+import { useCatchupServer } from "./catchup";
 import { fullScanReq } from "./fullScan";
 
 export function registerDbOp(squirrel: Squirrel) {
@@ -45,9 +45,9 @@ export function registerDbOp(squirrel: Squirrel) {
         console.log("[V-SQR-06-07] isUp:", isUp);
 
         if (!isUp) {
-            console.log("[V-SQR-06-08] Primary server down, using backup");
-            if (squirrel.config.allowBackupServer) {
-                return useBackupServer({
+            console.log("[V-SQR-06-08] Primary server down, using catchup");
+            if (squirrel.config.allowCatchupServer) {
+                return useCatchupServer({
                     squirrel,
                     data,
                     req,
@@ -57,7 +57,7 @@ export function registerDbOp(squirrel: Squirrel) {
             } else {
                 return res.status(503).json({
                     err: true,
-                    msg: "No backup server available"
+                    msg: "No catchup server available"
                 });
             }
         }

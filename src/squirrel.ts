@@ -14,7 +14,7 @@ export class Squirrel {
     ) {
         this.setupRoutes();
         this.config = {
-            allowBackupServer: true,
+            allowCatchupServer: true,
             allowFullScan: true,
             ...this.config
         }

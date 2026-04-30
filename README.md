@@ -18,7 +18,7 @@ Timestamped snapshots of the cluster's server list. Documents are routed based o
 
 ### AP over CA
 
-When the primary server is down, writes are queued on a backup node in `__squirrel_back`. The original server retrieves them via `POST /__squirrel/get-data` and acknowledges removal via `POST /__squirrel/get-data-ack`.
+When the primary server is down, writes are queued on a catchup node in `__squirrel_catchup` with the operation type and timestamp. The original server retrieves and replays them via `POST /squirrel/welcome-back`, which replays each operation using the stored `op` type, then cleans up the catchup entries.
 
 ### Full Scan
 
@@ -32,7 +32,7 @@ When no `_id` is present and `SQUIRREL_ALLOW_FULL_SCAN=true`, Squirrel broadcast
 | `SQUIRREL_AUTH` | Yes | - | Auth token |
 | `SQUIRREL_SEEDS` | Yes | - | Space-separated seed URLs (`http://<server-id>@<host>:<port>`) |
 | `SQUIRREL_ALLOW_FULL_SCAN` | No | `false` | Query without `_id`, broadcast to all servers |
-| `SQUIRREL_ALLOW_BACKUP_SERVER` | No | `false` | Queue writes on backup when primary is down |
+| `SQUIRREL_ALLOW_CATCHUP_SERVER` | No | `false` | Queue writes on catchup when primary is down |
 
 ## Usage
 

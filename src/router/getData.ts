@@ -1,45 +1,57 @@
+import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Squirrel } from "../squirrel";
 import { fullScanReq } from "./fullScan";
+import { CatchupEntry } from "../types";
 
 export function registerGetData(squirrel: Squirrel) {
-    if (!squirrel.config.allowBackupServer) {
-        console.log("[V-SQR-11-01] Backup server disabled, skipping getData routes");
+    if (!squirrel.config.allowCatchupServer) {
+        console.log("[V-SQR-11-01] Catchup server disabled, skipping getData routes");
         return;
     }
 
-    squirrel.app.post("/__squirrel/get-data", async (req, res) => {
+    squirrel.app.post("/squirrel/welcome-back", async (req, res) => {
         const { _id } = req.body;
-        console.log("[V-SQR-11-03] Get-data request for server:", _id);
 
         if (!_id)
             return res.json({ err: true, msg: "Missing id" });
 
-        const data = await fullScanReq(squirrel, {
-            collection: "__squirrel_back",
+        console.log("[V-SQR-11-07] Welcome-back request for server:", _id);
+
+        const host = squirrel.topology.servers.get(_id)?.host;
+
+        if (!host)
+            return res.json({ err: true, msg: "Server not found" });
+
+        const isUp = await squirrel.topology.isServerUp(host);
+        if (!isUp) {
+            console.log("[V-SQR-11-08] Lie. Server down, skipping:", _id);
+            return res.json({ err: true, msg: "Server down" });
+        }
+
+        const data: CatchupEntry[] = await fullScanReq(squirrel, {
+            collection: "__squirrel_catchup",
             search: {
                 to: _id
             }
         }, "find", false);
 
-        console.log("[V-SQR-11-04] Get-data result for server:", _id, "count:", data.length);
-        return res.json({ err: true, result: data });
-    });
+        data.sort((a, b) => a.time - b.time);
 
-    squirrel.app.post("/__squirrel/get-data-ack", async (req, res) => {
-        const { _id } = req.body;
-        console.log("[V-SQR-11-05] Get-data-ack request for server:", _id);
+        const client = new ValtheraRemote({
+            ...squirrel.authConfig,
+            url: host
+        });
 
-        if (!_id)
-            return res.json({ err: true, msg: "Missing id" });
+        for (const d of data)
+            await client[d.op](d.v);
 
-        const data = await fullScanReq(squirrel, {
-            collection: "__squirrel_back",
+        await fullScanReq(squirrel, {
+            collection: "__squirrel_catchup",
             search: {
                 to: _id
             }
         }, "remove", false);
 
-        console.log("[V-SQR-11-06] Get-data-ack removed for server:", _id, "count:", data.length);
-        return res.json({ err: true, result: data });
+        return res.json({ err: false });
     });
 }

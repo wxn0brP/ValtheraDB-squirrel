@@ -20,10 +20,17 @@ export interface AuthConfig {
 
 export interface SquirrelConfig {
     allowFullScan?: boolean;
-    allowBackupServer?: boolean;
+    allowCatchupServer?: boolean;
 }
 
 export interface ServerEpochInfo {
     server: ServerInfo;
     epoch: Epoch;
+}
+
+export interface CatchupEntry {
+    to: string;
+    v: any;
+    time: number;
+    op: string;
 }

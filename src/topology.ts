@@ -112,22 +112,22 @@ export class TopologyManager {
         return { server, epoch };
     }
 
-    async getBackupServer(excludedId: string, epoch: Epoch) {
-        console.log("[V-SQR-04-01] Searching for backup server, excluding:", excludedId);
+    async getCatchupServer(excludedId: string, epoch: Epoch) {
+        console.log("[V-SQR-04-01] Searching for catchup server, excluding:", excludedId);
         for (let i = 1; i < epoch.serverIds.length; i++) {
             const idx = (this._hash(excludedId) + i) % epoch.serverIds.length;
-            const backupId = epoch.serverIds[idx];
-            if (backupId !== excludedId) {
-                const backup = this.servers.get(backupId);
-                console.log("[V-SQR-04-02] Checking backup candidate:", backupId);
-                const isUp = await this.isServerUp(backup.host);
+            const catchupId = epoch.serverIds[idx];
+            if (catchupId !== excludedId) {
+                const catchup = this.servers.get(catchupId);
+                console.log("[V-SQR-04-02] Checking catchup candidate:", catchupId);
+                const isUp = await this.isServerUp(catchup.host);
                 if (isUp) {
-                    console.log("[V-SQR-04-03] Found backup server:", backupId);
-                    return backup;
+                    console.log("[V-SQR-04-03] Found catchup server:", catchupId);
+                    return catchup;
                 }
             }
         }
-        console.log("[V-SQR-04-04] No backup server found for excluded:", excludedId);
+        console.log("[V-SQR-04-04] No catchup server found for excluded:", excludedId);
         return null;
     }
 

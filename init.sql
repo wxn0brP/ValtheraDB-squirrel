@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS `__squirrel` (
     `v` TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `__squirrel_back` (
+CREATE TABLE IF NOT EXISTS `__squirrel_catchup` (
     `to` VARCHAR(255) NOT NULL,
-    `data` JSON NOT NULL
+    `data` JSON NOT NULL,
+    `op` VARCHAR(255) NOT NULL,
+    `time` BIGINT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
