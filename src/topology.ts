@@ -1,6 +1,6 @@
 import { ValtheraRemote } from "@wxn0brp/db-client";
-import { Epoch, AuthConfig, ServerInfo, SquirrelConfigDbEntry, ServerEpochInfo } from "./types";
 import { convertIdToUnix } from "@wxn0brp/db-core/utils/id";
+import { AuthConfig, Epoch, ServerEpochInfo, ServerInfo, SquirrelConfigDbEntry } from "./types";
 import { parseServerInfo } from "./utils";
 
 export class TopologyManager {
@@ -14,28 +14,35 @@ export class TopologyManager {
         let failed = 0;
         for (const seed of seeds) {
             const server = parseServerInfo(seed);
-            if (server.id) this.addServer(server);
+            if (server.id) {
+                console.log("[V-SQR-01-02] Seed parsed, adding server:", server.id);
+                this.addServer(server);
+            }
 
+            console.log("[V-SQR-01-03] Checking server availability:", seed);
             const isUp = await this.isServerUp(server.host);
             if (!isUp) {
+                console.log("[V-SQR-01-04] Server is down:", seed);
                 failed++;
                 continue;
             }
+            console.log("[V-SQR-01-05] Server is up:", seed);
             await this._getConfig(server.host, cfg);
+            console.log("[V-SQR-01-06] Successfully fetched config from:", seed);
         }
 
         if (failed === seeds.length)
-            throw new Error("[V-SQR-01-02] No servers available");
+            throw new Error("[V-SQR-01-07] No servers available");
 
         if (this.servers.size === 0)
-            throw new Error("[V-SQR-01-03] No servers found");
+            throw new Error("[V-SQR-01-08] No servers found");
 
         if (this.epochs.length)
             this.epochs.sort((a, b) => a.start - b.start);
         else {
-            console.log("[V-SQR-02-10] New epoch required. No epochs found");
+            console.log("[V-SQR-01-09] New epoch required. No epochs found");
             await this.initNewEpoch(cfg);
-            console.log("[V-SQR-02-11] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
+            console.log("[V-SQR-01-10] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
 
         const epochsServers = this.epochs[this.epochs.length - 1].serverIds;
@@ -43,14 +50,15 @@ export class TopologyManager {
         const notChanged = allServers.every(s => epochsServers.includes(s));
 
         if (!notChanged) {
-            console.log("[V-SQR-02-21] New epoch required. Servers list changed");
+            console.log("[V-SQR-01-11] New epoch required. Servers list changed");
             await this.initNewEpoch(cfg);
-            console.log("[V-SQR-02-22] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
+            console.log("[V-SQR-01-12] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
     }
 
     addServer(server: ServerInfo) {
         if (this.servers.has(server.id)) return;
+        console.log("[V-SQR-02-01] Adding server to topology:", server.id, server.host);
         this.servers.set(server.id, server);
     }
 
@@ -87,29 +95,39 @@ export class TopologyManager {
 
     getServerForId(id: string): ServerEpochInfo {
         const epoch = this.getEpoch(convertIdToUnix(id));
-        if (!epoch || epoch.serverIds.length === 0)
+        if (!epoch || epoch.serverIds.length === 0) {
+            console.log("[V-SQR-03-01] No epoch or empty serverIds for id:", id);
             return null;
+        }
 
         const idx = this._hash(id) % epoch.serverIds.length;
         const targetId = epoch.serverIds[idx];
+        console.log("[V-SQR-03-02] Resolving server for id:", id, "hash:", idx, "target:", targetId);
         const server = this.servers.get(targetId);
-        if (!server)
+        if (!server) {
+            console.log("[V-SQR-03-03] Server not found for id:", id, "target:", targetId);
             return null;
+        }
 
         return { server, epoch };
     }
 
     async getBackupServer(excludedId: string, epoch: Epoch) {
+        console.log("[V-SQR-04-01] Searching for backup server, excluding:", excludedId);
         for (let i = 1; i < epoch.serverIds.length; i++) {
             const idx = (this._hash(excludedId) + i) % epoch.serverIds.length;
             const backupId = epoch.serverIds[idx];
             if (backupId !== excludedId) {
                 const backup = this.servers.get(backupId);
+                console.log("[V-SQR-04-02] Checking backup candidate:", backupId);
                 const isUp = await this.isServerUp(backup.host);
-                if (isUp)
+                if (isUp) {
+                    console.log("[V-SQR-04-03] Found backup server:", backupId);
                     return backup;
+                }
             }
         }
+        console.log("[V-SQR-04-04] No backup server found for excluded:", excludedId);
         return null;
     }
 
@@ -144,11 +162,13 @@ export class TopologyManager {
 
     async initNewEpoch(cfg: AuthConfig) {
         const now = Date.now();
+        console.log("[V-SQR-05-01] Creating new epoch at:", now);
 
         const servers = [...this.servers.keys()];
         if (servers.length === 0)
-            throw new Error("[V-SQR-03-01] No servers found");
+            throw new Error("[V-SQR-05-02] No servers found");
         servers.sort((a, b) => a.localeCompare(b));
+        console.log("[V-SQR-05-03] Servers in new epoch:", servers);
 
         const newEpoch: Epoch = {
             start: now,
@@ -169,9 +189,11 @@ export class TopologyManager {
                         v: newEpoch.start + "," + newEpoch.serverIds.join(",")
                     }
                 });
+                console.log("[V-SQR-05-04] Epoch added to server:", server);
             } catch {
-                console.log("[V-SQR-03-02] Failed to add epoch to server:", server);
+                console.log("[V-SQR-05-05] Failed to add epoch to server:", server);
             }
         }
+        console.log("[V-SQR-05-06] Epoch created successfully:", newEpoch.start, "servers:", newEpoch.serverIds.length);
     }
 }

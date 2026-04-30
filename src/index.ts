@@ -1,5 +1,5 @@
-import { Squirrel } from "./squirrel";
 import FalconFrame from "@wxn0brp/falcon-frame";
+import { Squirrel } from "./squirrel";
 
 const app = new FalconFrame();
 app.l(14415);
@@ -12,7 +12,7 @@ const squirrel = new Squirrel(
     },
     {
         allowFullScan: process.env.SQUIRREL_ALLOW_FULL_SCAN === "true",
-        allowBackupServer: process.env.SQUIRREL_ALLOW_BACKUP === "true"
+        allowBackupServer: process.env.SQUIRREL_ALLOW_BACKUP_SERVER === "true"
     }
 );
 

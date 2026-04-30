@@ -13,6 +13,7 @@ export interface BackupServerOpts {
 }
 
 export async function useBackupServer({ squirrel, data, req, res, target }: BackupServerOpts) {
+    console.log("[V-SQR-08-01] Using backup server for op:", req.params.op, "target:", target.server.id);
     switch (req.params.op) {
         case "find":
         case "findOne":
@@ -22,8 +23,12 @@ export async function useBackupServer({ squirrel, data, req, res, target }: Back
     }
 
     const backup = await squirrel.topology.getBackupServer(target.server.id, target.epoch);
-    if (!backup)
+    if (!backup) {
+        console.log("[V-SQR-08-02] No backup server available for:", target.server.id);
         return res.status(503).json({ err: true, msg: "No backup server available" });
+    }
+
+    console.log("[V-SQR-08-03] Using backup server:", backup.id);
 
     const client = new ValtheraRemote({
         ...squirrel.authConfig,
@@ -38,7 +43,7 @@ export async function useBackupServer({ squirrel, data, req, res, target }: Back
         }
     });
 
-    console.log("[V-SQR-06-01] Successfully added to backup server:", target.server.id, addResult);
+    console.log("[V-SQR-08-04] Successfully added to backup server:", target.server.id, addResult);
 
     res.status(207).json({
         err: true,
