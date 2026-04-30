@@ -1,0 +1,9 @@
+{
+    cmd: "tsc --noEmit && bun run bun",
+    watch: [
+        "src"
+    ],
+    ignore: [
+        "src/test.ts"
+    ]
+}
