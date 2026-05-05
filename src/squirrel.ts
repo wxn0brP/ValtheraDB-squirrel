@@ -44,6 +44,8 @@ export class Squirrel {
 
             if (authToken !== this.authConfig.auth)
                 return res.status(401).json({ err: true, msg: "Unauthorized" });
+
+            next();
         });
 
         registerDbOp(this);
