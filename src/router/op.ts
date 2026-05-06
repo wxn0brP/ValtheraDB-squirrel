@@ -1,4 +1,6 @@
 import type { VQuery } from "@wxn0brp/db-core/types/query";
+import { replicationFind, replicationFindOne } from "../replication/find";
+import { replicationOther } from "../replication/other";
 import { Squirrel } from "../squirrel";
 import { useCatchupServer } from "./catchup";
 import { fullScanReq } from "./fullScan";
@@ -18,6 +20,31 @@ export function registerDbOp(squirrel: Squirrel) {
 
         const id = data.data?._id || data.search?._id;
         console.log("[V-SQR-06-01] id:", id);
+
+        if (squirrel.config.replicationEnabled) {
+            switch (req.params.op) {
+                case "findOne":
+                    return {
+                        err: false,
+                        result: await replicationFindOne(squirrel, id, data as any)
+                    }
+                case "find":
+                    return {
+                        err: false,
+                        result: await replicationFind(squirrel, id, data as any)
+                    }
+                case "issetCollection":
+                case "getCollections":
+                case "ensureCollection":
+                case "removeCollection":
+                    break;
+                default:
+                    return {
+                        err: false,
+                        result: await replicationOther(squirrel, req.params.op, id, data as any)
+                    }
+            }
+        }
 
         if (!id) {
             console.log("[V-SQR-06-02] No id in query, checking full scan");

@@ -109,7 +109,7 @@ export class TopologyManager {
             return null;
         }
 
-        return { server, epoch };
+        return { server, epoch, idx };
     }
 
     async getCatchupServer(excludedId: string, epoch: Epoch) {

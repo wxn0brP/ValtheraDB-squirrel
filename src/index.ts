@@ -12,7 +12,9 @@ const squirrel = new Squirrel(
     },
     {
         allowFullScan: process.env.SQUIRREL_ALLOW_FULL_SCAN === "true",
-        allowCatchupServer: process.env.SQUIRREL_ALLOW_CATCHUP_SERVER === "true"
+        allowCatchupServer: process.env.SQUIRREL_ALLOW_CATCHUP_SERVER === "true",
+        replicationEnabled: process.env.SQUIRREL_REPLICATION_ENABLED === "true",
+        replicationFactor: +process.env.SQUIRREL_REPLICATION_FACTOR || 3,
     }
 );
 

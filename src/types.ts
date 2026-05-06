@@ -21,11 +21,14 @@ export interface AuthConfig {
 export interface SquirrelConfig {
     allowFullScan?: boolean;
     allowCatchupServer?: boolean;
+    replicationEnabled?: boolean;
+    replicationFactor?: number;
 }
 
 export interface ServerEpochInfo {
     server: ServerInfo;
     epoch: Epoch;
+    idx: number;
 }
 
 export interface CatchupEntry {
