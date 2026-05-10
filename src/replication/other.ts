@@ -6,24 +6,25 @@ import { Squirrel } from "../squirrel";
 import { ServerInfo } from "../types";
 import { getReplicaServers } from "./utils";
 import { squirrelTimeKey } from "./vars";
+import { logger } from "../logger";
 
 export async function replicationOther(squirrel: Squirrel, op: string, id: string, data: VQuery) {
-    console.log(`[V-SQR-13-01] replicationOther, op: ${op}, id: ${id}`);
+    logger.debug("REPLICATION", "[V-SQR-13-01] replicationOther, op:", op, "id:", id);
     let servers: ServerInfo[] = [];
     if (id) {
         servers = getReplicaServers(squirrel, id);
-        console.log(`[V-SQR-13-02] replicas count: ${servers.length}`);
+        logger.debug("REPLICATION", "[V-SQR-13-02] replicas count:", servers.length);
         if (!servers.length) return [];
     } else {
         servers = [...squirrel.topology.servers.values()];
-        console.log(`[V-SQR-13-03] total servers: ${servers.length}`);
+        logger.debug("REPLICATION", "[V-SQR-13-03] total servers:", servers.length);
     }
 
     if (!servers.length) return [];
 
     if (data.updater) data.updater[squirrelTimeKey] = Date.now();
     if (data.data) data.data[squirrelTimeKey] = Date.now();
-    console.log(`[V-SQR-13-04] added ${squirrelTimeKey} to data/updater`);
+    logger.debug("REPLICATION", "[V-SQR-13-04] added", squirrelTimeKey, "to data/updater");
 
     let responses: Data[] = [];
     let missing: ServerInfo[] = [];
@@ -33,11 +34,11 @@ export async function replicationOther(squirrel: Squirrel, op: string, id: strin
                 ...squirrel.authConfig,
                 url: server.host
             });
-            console.log(`[V-SQR-13-05] calling ${op} on ${server.host}`);
+            logger.debug("REPLICATION", "[V-SQR-13-05] calling", op, "on", server.host);
             const res = await client[op](data);
             responses.push(res);
         } catch (e) {
-            console.log(`[V-SQR-13-06] error querying ${server.host}: ${e.message}`);
+            logger.error("REPLICATION", "[V-SQR-13-06] error querying", server.host, ":", e.message);
             missing.push(server);
         }
     }
@@ -47,11 +48,11 @@ export async function replicationOther(squirrel: Squirrel, op: string, id: strin
         const epoch = squirrel.topology.getEpoch(Date.now());
         for (const miss of missing) {
             const result = await useCatchupServerLogic(squirrel, data, op, miss.id, epoch);
-            if ("err" in result) console.log(`[V-SQR-13-08] catchup failed for ${miss.id}: ${result.msg}`);
+            if ("err" in result) logger.warn("REPLICATION", "[V-SQR-13-08] catchup failed for", miss.id, ":", result.msg);
         }
     }
 
-    console.log(`[V-SQR-13-07] returning ${responses.length} responses`);
+    logger.debug("REPLICATION", "[V-SQR-13-07] returning", responses.length, "responses");
 
     if (!responses.length) return op.includes("One") ? undefined : [];
 

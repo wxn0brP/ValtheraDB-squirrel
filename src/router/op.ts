@@ -4,6 +4,7 @@ import { replicationOther } from "../replication/other";
 import { Squirrel } from "../squirrel";
 import { useCatchupServer } from "./catchup";
 import { fullScanReq } from "./fullScan";
+import { logger } from "../logger";
 
 export function registerDbOp(squirrel: Squirrel) {
     squirrel.app.post("/db/:op", async (req, res) => {
@@ -19,7 +20,7 @@ export function registerDbOp(squirrel: Squirrel) {
             return res.status(400).json({ err: true, msg: "Search is not supported" });
 
         const id = data.data?._id || data.search?._id;
-        console.log("[V-SQR-06-01] id:", id);
+        logger.debug("ROUTER", "[V-SQR-06-01] id:", id);
 
         if (squirrel.config.replicationEnabled) {
             switch (req.params.op) {
@@ -47,9 +48,9 @@ export function registerDbOp(squirrel: Squirrel) {
         }
 
         if (!id) {
-            console.log("[V-SQR-06-02] No id in query, checking full scan");
+            logger.debug("ROUTER", "[V-SQR-06-02] No id in query, checking full scan");
             if (squirrel.config.allowFullScan) {
-                console.log("[V-SQR-06-03] Starting full scan");
+                logger.debug("ROUTER", "[V-SQR-06-03] Starting full scan");
                 return fullScanReq(
                     squirrel,
                     data as any,
@@ -57,22 +58,22 @@ export function registerDbOp(squirrel: Squirrel) {
                     res
                 );
             }
-            console.log("[V-SQR-06-04] Full scan not allowed");
+            logger.warn("ROUTER", "[V-SQR-06-04] Full scan not allowed");
             return res.status(400).json({ err: true, msg: "Missing id" });
         }
 
         const target = squirrel.topology.getServerForId(id);
         if (!target) {
-            console.log("[V-SQR-06-05] No server found for id:", id);
+            logger.error("ROUTER", "[V-SQR-06-05] No server found for id:", id);
             return res.status(503).json({ err: true, msg: "No server for epoch" });
         }
 
-        console.log("[V-SQR-06-06] target:", target);
+        logger.debug("ROUTER", "[V-SQR-06-06] target:", target);
         const isUp = await squirrel.topology.isServerUp(target.server.host);
-        console.log("[V-SQR-06-07] isUp:", isUp);
+        logger.debug("ROUTER", "[V-SQR-06-07] isUp:", isUp);
 
         if (!isUp) {
-            console.log("[V-SQR-06-08] Primary server down, using catchup");
+            logger.warn("ROUTER", "[V-SQR-06-08] Primary server down, using catchup");
             if (squirrel.config.allowCatchupServer) {
                 return useCatchupServer({
                     squirrel,
@@ -91,7 +92,7 @@ export function registerDbOp(squirrel: Squirrel) {
 
         const host = target.server.host;
         const redirectUrl = `${host.endsWith("/") ? host : host + "/"}db/${req.params.op}`;
-        console.log("[V-SQR-06-09] redirect:", redirectUrl);
+        logger.debug("ROUTER", "[V-SQR-06-09] redirect:", redirectUrl);
         res.redirect(redirectUrl, 307);
     });
 }

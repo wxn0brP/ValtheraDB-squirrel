@@ -1,4 +1,5 @@
 import { Squirrel } from "../squirrel";
+import { logger } from "../logger";
 
 export function getReplicaServers(squirrel: Squirrel, id: string) {
     const { epoch, idx } = squirrel.topology.getServerForId(id);
@@ -7,10 +8,10 @@ export function getReplicaServers(squirrel: Squirrel, id: string) {
 }
 
 function selectServers(servers: string[], idx: number, required: number): string[] {
-    console.log(`[V-SQR-14-01] selectServers, total servers: ${servers.length}, idx: ${idx}, required: ${required}`);
+    logger.debug("REPLICATION", "[V-SQR-14-01] selectServers, total servers:", servers.length, "idx:", idx, "required:", required);
     const n = servers.length;
     if (n === 0 || required <= 0) {
-        console.log(`[V-SQR-14-02] no servers or required <=0, returning empty`);
+        logger.warn("REPLICATION", "[V-SQR-14-02] no servers or required <=0, returning empty");
         return [];
     }
 
@@ -22,6 +23,6 @@ function selectServers(servers: string[], idx: number, required: number): string
         currentIndex = (currentIndex + 1) % n;
     }
 
-    console.log(`[V-SQR-14-03] selected ${result.length} servers`);
+    logger.debug("REPLICATION", "[V-SQR-14-03] selected", result.length, "servers");
     return result;
 }

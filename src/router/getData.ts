@@ -2,10 +2,11 @@ import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Squirrel } from "../squirrel";
 import { fullScanReq } from "./fullScan";
 import { CatchupEntry } from "../types";
+import { logger } from "../logger";
 
 export function registerGetData(squirrel: Squirrel) {
     if (!squirrel.config.allowCatchupServer) {
-        console.log("[V-SQR-11-01] Catchup server disabled, skipping getData routes");
+        logger.info("SYNC", "[V-SQR-11-01] Catchup server disabled, skipping getData routes");
         return;
     }
 
@@ -15,7 +16,7 @@ export function registerGetData(squirrel: Squirrel) {
         if (!_id)
             return res.json({ err: true, msg: "Missing id" });
 
-        console.log("[V-SQR-11-07] Welcome-back request for server:", _id);
+        logger.info("SYNC", "[V-SQR-11-07] Welcome-back request for server:", _id);
 
         const host = squirrel.topology.servers.get(_id)?.host;
 
@@ -24,7 +25,7 @@ export function registerGetData(squirrel: Squirrel) {
 
         const isUp = await squirrel.topology.isServerUp(host);
         if (!isUp) {
-            console.log("[V-SQR-11-08] Lie. Server down, skipping:", _id);
+            logger.warn("SYNC", "[V-SQR-11-08] Lie. Server down, skipping:", _id);
             return res.json({ err: true, msg: "Server down" });
         }
 
