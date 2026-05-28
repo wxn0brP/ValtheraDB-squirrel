@@ -8,16 +8,13 @@ import { logger } from "../logger";
 
 export function registerDbOp(squirrel: Squirrel) {
     squirrel.app.post("/db/:op", async (req, res) => {
-        const { params } = req.body as { params: [VQuery] };
-        if (!Array.isArray(params))
-            return res.json({ err: true, msg: "Params must be array" });
+        const data: VQuery = req.body.query || req.body.params?.[0];
 
-        const data = params[0];
-        if (typeof data !== "object" || Array.isArray(data))
+        if (!data || typeof data !== "object" || Array.isArray(data))
             return res.json({ err: true, msg: "VQuery is not an object" });
 
         if (typeof data.search === "function")
-            return res.status(400).json({ err: true, msg: "Search is not supported" });
+            return res.status(400).json({ err: true, msg: "Search function is not supported" });
 
         const id = data.data?._id || data.search?._id;
         logger.debug("ROUTER", "[V-SQR-06-01] id:", id);

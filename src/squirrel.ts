@@ -7,6 +7,7 @@ import { logger } from "./logger";
 
 export class Squirrel {
     topology = new TopologyManager();
+    _ready = false;
 
     constructor(
         public app: Router,
@@ -31,9 +32,17 @@ export class Squirrel {
         if (this.config.replicationEnabled) {
             logger.info("SYSTEM", "[V-SQR-09-04] Replication enabled. Factor:", this.config.replicationFactor);
         }
+
+        this._ready = true;
     }
 
     setupRoutes() {
+        this.app.use((req, res, next) => {
+            if (!this._ready)
+                return res.status(503).json({ err: true, msg: "Squirrel not ready" });
+            next();
+        });
+
         this.app.use((req, res, next) => {
             const { auth, db } = req.body;
             const authHeader = req.headers.authorization;

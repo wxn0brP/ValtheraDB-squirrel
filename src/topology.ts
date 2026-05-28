@@ -1,8 +1,8 @@
 import { ValtheraRemote } from "@wxn0brp/db-client";
 import { convertIdToUnix } from "@wxn0brp/db-core/utils/id";
+import { logger } from "./logger";
 import { AuthConfig, Epoch, ServerEpochInfo, ServerInfo, SquirrelConfigDbEntry } from "./types";
 import { parseServerInfo } from "./utils";
-import { logger } from "./logger";
 
 export class TopologyManager {
     epochs: Epoch[] = [];
@@ -18,32 +18,36 @@ export class TopologyManager {
             if (server.id) {
                 logger.info("TOPOLOGY", "[V-SQR-01-02] Seed parsed, adding server:", server.id);
                 this.addServer(server);
-            }
-
-            logger.info("TOPOLOGY", "[V-SQR-01-03] Checking server availability:", seed);
-            const isUp = await this.isServerUp(server.host);
-            if (!isUp) {
-                logger.warn("TOPOLOGY", "[V-SQR-01-04] Server is down:", seed);
+            } else {
+                logger.warn("TOPOLOGY", "[V-SQR-01-03] Invalid seed:", seed);
                 failed++;
                 continue;
             }
-            logger.info("TOPOLOGY", "[V-SQR-01-05] Server is up:", seed);
+
+            logger.info("TOPOLOGY", "[V-SQR-01-04] Checking server availability:", seed);
+            const isUp = await this.isServerUp(server.host);
+            if (!isUp) {
+                logger.warn("TOPOLOGY", "[V-SQR-01-05] Server is down:", seed);
+                failed++;
+                continue;
+            }
+            logger.info("TOPOLOGY", "[V-SQR-01-06] Server is up:", seed);
             await this._getConfig(server.host, cfg);
-            logger.info("TOPOLOGY", "[V-SQR-01-06] Successfully fetched config from:", seed);
+            logger.info("TOPOLOGY", "[V-SQR-01-07] Successfully fetched config from:", seed);
         }
 
         if (failed === seeds.length)
-            throw new Error("[V-SQR-01-07] No servers available");
+            throw new Error("[V-SQR-01-10] No servers available");
 
         if (this.servers.size === 0)
-            throw new Error("[V-SQR-01-08] No servers found");
+            throw new Error("[V-SQR-01-11] No servers found");
 
         if (this.epochs.length)
             this.epochs.sort((a, b) => a.start - b.start);
         else {
-            logger.info("TOPOLOGY", "[V-SQR-01-09] New epoch required. No epochs found");
+            logger.info("TOPOLOGY", "[V-SQR-01-12] New epoch required. No epochs found");
             await this.initNewEpoch(cfg);
-            logger.info("TOPOLOGY", "[V-SQR-01-10] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
+            logger.info("TOPOLOGY", "[V-SQR-01-13] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
 
         const epochsServers = this.epochs[this.epochs.length - 1].serverIds;
@@ -51,9 +55,9 @@ export class TopologyManager {
         const notChanged = allServers.every(s => epochsServers.includes(s));
 
         if (!notChanged) {
-            logger.info("TOPOLOGY", "[V-SQR-01-11] New epoch required. Servers list changed");
+            logger.info("TOPOLOGY", "[V-SQR-01-20] New epoch required. Servers list changed");
             await this.initNewEpoch(cfg);
-            logger.info("TOPOLOGY", "[V-SQR-01-12] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
+            logger.info("TOPOLOGY", "[V-SQR-01-21] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
     }
 
@@ -78,7 +82,14 @@ export class TopologyManager {
             if (config.length === 0) return;
 
             const servers = config.filter(d => d._id === "server");
-            servers.forEach(d => this.addServer(parseServerInfo(d.v)));
+            servers.forEach(d => {
+                const info = parseServerInfo(d.v);
+                if (!info.id) {
+                    logger.warn("TOPOLOGY", "[V-SQR-17-02] Invalid server info. Missing id:", d.v);
+                    return;
+                }
+                this.addServer(info);
+            });
 
             const epochs = config.filter(d => d._id === "epoch");
             epochs.forEach(d => {
@@ -91,7 +102,9 @@ export class TopologyManager {
                     serverIds: data
                 });
             });
-        } catch { }
+        } catch (e) {
+            logger.info("TOPOLOGY", "[V-SQR-17-01] Failed to fetch config from:", url, e.message);
+        }
     }
 
     getServerForId(id: string): ServerEpochInfo {

@@ -53,7 +53,7 @@ export async function useCatchupServerLogic(squirrel: Squirrel, data: VQuery, op
         data: {
             to: serverId,
             op: op,
-            data,
+            v: data,
             time: Date.now()
         }
     });
