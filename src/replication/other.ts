@@ -1,11 +1,11 @@
 import { Data } from "@wxn0brp/db-core/types/data";
 import { VQuery } from "@wxn0brp/db-core/types/query";
+import { logger } from "../logger";
 import { useCatchupServerLogic } from "../router/catchup";
 import { Squirrel } from "../squirrel";
 import { ServerInfo } from "../types";
+import { squirrelTimeKey } from "../vars";
 import { getReplicaServers } from "./utils";
-import { squirrelTimeKey } from "./vars";
-import { logger } from "../logger";
 
 export async function replicationOther(squirrel: Squirrel, op: string, id: string, data: VQuery) {
     logger.debug("REPLICATION", "[V-SQR-13-01] replicationOther, op:", op, "id:", id);

@@ -1,11 +1,12 @@
 import type { VQuery } from "@wxn0brp/db-core/types/query";
+import { FFRequest, FFResponse } from "@wxn0brp/falcon-frame";
+import { logger } from "../logger";
 import { replicationFind, replicationFindOne } from "../replication/find";
 import { replicationOther } from "../replication/other";
 import { Squirrel } from "../squirrel";
+import { HTTP_STATUS } from "../vars";
 import { useCatchupServer } from "./catchup";
 import { fullScanReq } from "./fullScan";
-import { logger } from "../logger";
-import { FFRequest, FFResponse } from "@wxn0brp/falcon-frame";
 
 function getQuery(req: FFRequest): VQuery {
     return req.body.query || req.body.params?.[0];
@@ -108,5 +109,5 @@ async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data
     const host = target.server.host;
     const redirectUrl = `${host.endsWith("/") ? host : host + "/"}db/${op}`;
     logger.debug("ROUTER", "[V-SQR-06-09] redirect:", redirectUrl);
-    res.redirect(redirectUrl, 307);
+    res.redirect(redirectUrl, HTTP_STATUS.TEMPORARY_REDIRECT);
 }

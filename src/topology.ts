@@ -3,6 +3,7 @@ import { logger } from "./logger";
 import { Squirrel } from "./squirrel";
 import { Epoch, ServerEpochInfo, ServerInfo, SquirrelConfigDbEntry } from "./types";
 import { parseServerInfo } from "./utils";
+import { COLLECTIONS, TIMEOUTS } from "./vars";
 
 export class TopologyManager {
     epochs: Epoch[] = [];
@@ -74,7 +75,7 @@ export class TopologyManager {
             const client = this.squirrel.getClient(url);
 
             const config: SquirrelConfigDbEntry[] = await client.find({
-                collection: "__squirrel",
+                collection: COLLECTIONS.SQUIRREL,
                 search: {}
             });
 
@@ -148,7 +149,7 @@ export class TopologyManager {
         try {
             const res = await fetch(host, {
                 method: "GET",
-                signal: AbortSignal.timeout(1500)
+                signal: AbortSignal.timeout(TIMEOUTS.SERVER_CHECK)
             });
             return !!res.status;
         } catch {
@@ -195,7 +196,7 @@ export class TopologyManager {
             const client = this.squirrel.getClient(host);
             try {
                 await client.add({
-                    collection: "__squirrel",
+                    collection: COLLECTIONS.SQUIRREL,
                     data: {
                         _id: "epoch",
                         v: newEpoch.start + "," + newEpoch.serverIds.join(",")

@@ -1,10 +1,10 @@
 import { Data } from "@wxn0brp/db-core/types/data";
 import { VQueryT } from "@wxn0brp/db-core/types/query";
+import { logger } from "../logger";
 import { fullScanReq } from "../router/fullScan";
 import { Squirrel } from "../squirrel";
+import { squirrelTimeKey } from "../vars";
 import { getReplicaServers } from "./utils";
-import { squirrelTimeKey } from "./vars";
-import { logger } from "../logger";
 
 export async function replicationFind(squirrel: Squirrel, id: string, data: VQueryT.Find): Promise<Data[]> {
     logger.debug("REPLICATION", "[V-SQR-10-01] replicationFind, id:", id);

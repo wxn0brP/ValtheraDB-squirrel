@@ -1,8 +1,9 @@
 import { VQuery } from "@wxn0brp/db-core/types/query";
 import { FFRequest, FFResponse } from "@wxn0brp/falcon-frame";
+import { logger } from "../logger";
 import { Squirrel } from "../squirrel";
 import { CatchupEntry, Epoch, ServerEpochInfo } from "../types";
-import { logger } from "../logger";
+import { COLLECTIONS, HTTP_STATUS } from "../vars";
 
 export interface CatchupServerOpts {
     squirrel: Squirrel;
@@ -26,7 +27,7 @@ export async function useCatchupServer({ squirrel, data, req, res, target }: Cat
     const addResult = await useCatchupServerLogic(squirrel, data, req.params.op, target.server.id, target.epoch);
     if ("err" in addResult) return res.status(503).json(addResult);
 
-    res.status(207).json({
+    res.status(HTTP_STATUS.MULTI_STATUS).json({
         err: true,
         msg: "Successfully added to catchup server",
         result: addResult
@@ -45,7 +46,7 @@ export async function useCatchupServerLogic(squirrel: Squirrel, data: VQuery, op
     const client = squirrel.getClient(catchup.host);
 
     const addResult = await client.add<CatchupEntry>({
-        collection: "__squirrel_catchup",
+        collection: COLLECTIONS.SQUIRREL_CATCHUP,
         data: {
             to: serverId,
             op: op,

@@ -1,7 +1,8 @@
-import { Squirrel } from "../squirrel";
-import { fullScanReq } from "./fullScan";
-import { CatchupEntry } from "../types";
 import { logger } from "../logger";
+import { Squirrel } from "../squirrel";
+import { CatchupEntry } from "../types";
+import { COLLECTIONS } from "../vars";
+import { fullScanReq } from "./fullScan";
 
 export function registerGetData(squirrel: Squirrel) {
     if (!squirrel.config.allowCatchupServer) {
@@ -29,7 +30,7 @@ export function registerGetData(squirrel: Squirrel) {
         }
 
         const data: CatchupEntry[] = await fullScanReq(squirrel, {
-            collection: "__squirrel_catchup",
+            collection: COLLECTIONS.SQUIRREL_CATCHUP,
             search: {
                 to: _id
             }
@@ -43,7 +44,7 @@ export function registerGetData(squirrel: Squirrel) {
             await client[d.op](d.v);
 
         await fullScanReq(squirrel, {
-            collection: "__squirrel_catchup",
+            collection: COLLECTIONS.SQUIRREL_CATCHUP,
             search: {
                 to: _id
             }

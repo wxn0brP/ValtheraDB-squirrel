@@ -1,10 +1,10 @@
 import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Router } from "@wxn0brp/falcon-frame";
+import { logger } from "./logger";
 import { registerGetData } from "./router/getData";
 import { registerDbOp } from "./router/op";
 import { TopologyManager } from "./topology";
 import { AuthConfig, SquirrelConfig } from "./types";
-import { logger } from "./logger";
 
 export class Squirrel {
     topology = new TopologyManager(this);
