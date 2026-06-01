@@ -1,14 +1,16 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import { convertIdToUnix } from "@wxn0brp/db-core/utils/id";
 import { logger } from "./logger";
-import { AuthConfig, Epoch, ServerEpochInfo, ServerInfo, SquirrelConfigDbEntry } from "./types";
+import { Squirrel } from "./squirrel";
+import { Epoch, ServerEpochInfo, ServerInfo, SquirrelConfigDbEntry } from "./types";
 import { parseServerInfo } from "./utils";
 
 export class TopologyManager {
     epochs: Epoch[] = [];
     servers = new Map<string, ServerInfo>();
 
-    async init(seeds: string[], cfg: AuthConfig) {
+    constructor(public squirrel: Squirrel) { }
+
+    async init(seeds: string[]) {
         if (seeds.length === 0)
             throw new Error("[V-SQR-01-01] No seeds provided");
 
@@ -32,7 +34,7 @@ export class TopologyManager {
                 continue;
             }
             logger.info("TOPOLOGY", "[V-SQR-01-06] Server is up:", seed);
-            await this._getConfig(server.host, cfg);
+            await this._getConfig(server.host);
             logger.info("TOPOLOGY", "[V-SQR-01-07] Successfully fetched config from:", seed);
         }
 
@@ -46,7 +48,7 @@ export class TopologyManager {
             this.epochs.sort((a, b) => a.start - b.start);
         else {
             logger.info("TOPOLOGY", "[V-SQR-01-12] New epoch required. No epochs found");
-            await this.initNewEpoch(cfg);
+            await this.initNewEpoch();
             logger.info("TOPOLOGY", "[V-SQR-01-13] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
 
@@ -56,7 +58,7 @@ export class TopologyManager {
 
         if (!notChanged) {
             logger.info("TOPOLOGY", "[V-SQR-01-20] New epoch required. Servers list changed");
-            await this.initNewEpoch(cfg);
+            await this.initNewEpoch();
             logger.info("TOPOLOGY", "[V-SQR-01-21] New epoch initialized. Servers:", this.epochs[this.epochs.length - 1].serverIds);
         }
     }
@@ -67,12 +69,9 @@ export class TopologyManager {
         this.servers.set(server.id, server);
     }
 
-    async _getConfig(url: string, cfg: AuthConfig) {
+    async _getConfig(url: string) {
         try {
-            const client = new ValtheraRemote({
-                ...cfg,
-                url
-            });
+            const client = this.squirrel.getClient(url);
 
             const config: SquirrelConfigDbEntry[] = await client.find({
                 collection: "__squirrel",
@@ -174,7 +173,7 @@ export class TopologyManager {
         return Math.abs(h);
     }
 
-    async initNewEpoch(cfg: AuthConfig) {
+    async initNewEpoch() {
         const now = Date.now();
         logger.info("TOPOLOGY", "[V-SQR-05-01] Creating new epoch at:", now);
 
@@ -192,10 +191,8 @@ export class TopologyManager {
 
         let failed = 0;
         for (const server of servers) {
-            const client = new ValtheraRemote({
-                ...cfg,
-                url: this.servers.get(server).host
-            })
+            const host = this.servers.get(server).host;
+            const client = this.squirrel.getClient(host);
             try {
                 await client.add({
                     collection: "__squirrel",

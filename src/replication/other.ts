@@ -1,4 +1,3 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Data } from "@wxn0brp/db-core/types/data";
 import { VQuery } from "@wxn0brp/db-core/types/query";
 import { useCatchupServerLogic } from "../router/catchup";
@@ -30,10 +29,7 @@ export async function replicationOther(squirrel: Squirrel, op: string, id: strin
     let missing: ServerInfo[] = [];
     for (const server of servers) {
         try {
-            const client = new ValtheraRemote({
-                ...squirrel.authConfig,
-                url: server.host
-            });
+            const client = squirrel.getClient(server.host);
             logger.debug("REPLICATION", "[V-SQR-13-05] calling", op, "on", server.host);
             const res = await client[op](data);
             responses.push(res);

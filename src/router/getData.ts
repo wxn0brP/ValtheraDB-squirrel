@@ -1,4 +1,3 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Squirrel } from "../squirrel";
 import { fullScanReq } from "./fullScan";
 import { CatchupEntry } from "../types";
@@ -38,10 +37,7 @@ export function registerGetData(squirrel: Squirrel) {
 
         data.sort((a, b) => a.time - b.time);
 
-        const client = new ValtheraRemote({
-            ...squirrel.authConfig,
-            url: host
-        });
+        const client = squirrel.getClient(host);
 
         for (const d of data)
             await client[d.op](d.v);

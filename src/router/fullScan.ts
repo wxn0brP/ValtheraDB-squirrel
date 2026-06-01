@@ -1,4 +1,3 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import type { VQuery } from "@wxn0brp/db-core/types/query";
 import { FFResponse } from "@wxn0brp/falcon-frame";
 import { Squirrel } from "../squirrel";
@@ -17,10 +16,7 @@ export async function fullScanReq(squirrel: Squirrel, data: VQuery, op: string, 
             continue;
         }
 
-        const client = new ValtheraRemote({
-            ...squirrel.authConfig,
-            url: server.host
-        });
+        const client = squirrel.getClient(server.host);
 
         logger.debug("FULLSCAN", "[V-SQR-07-02] Querying server:", serverId, "op:", op);
 

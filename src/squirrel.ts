@@ -1,3 +1,4 @@
+import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Router } from "@wxn0brp/falcon-frame";
 import { registerGetData } from "./router/getData";
 import { registerDbOp } from "./router/op";
@@ -6,8 +7,9 @@ import { AuthConfig, SquirrelConfig } from "./types";
 import { logger } from "./logger";
 
 export class Squirrel {
-    topology = new TopologyManager();
+    topology = new TopologyManager(this);
     _ready = false;
+    clients = new Map<string, ValtheraRemote>();
 
     constructor(
         public app: Router,
@@ -24,9 +26,19 @@ export class Squirrel {
         }
     }
 
+    getClient(host: string): ValtheraRemote {
+        if (!this.clients.has(host)) {
+            this.clients.set(host, new ValtheraRemote({
+                ...this.authConfig,
+                url: host
+            }));
+        }
+        return this.clients.get(host);
+    }
+
     async init(seeds: string[]) {
         logger.info("SYSTEM", "[V-SQR-09-02] Initializing Squirrel with seeds:", seeds.length);
-        await this.topology.init(seeds, this.authConfig);
+        await this.topology.init(seeds);
         logger.info("SYSTEM", "[V-SQR-09-03] Squirrel initialized, servers:", this.topology.servers.size, "epochs:", this.topology.epochs.length);
 
         if (this.config.replicationEnabled) {

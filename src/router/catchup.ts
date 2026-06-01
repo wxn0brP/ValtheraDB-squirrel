@@ -1,4 +1,3 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import { VQuery } from "@wxn0brp/db-core/types/query";
 import { FFRequest, FFResponse } from "@wxn0brp/falcon-frame";
 import { Squirrel } from "../squirrel";
@@ -43,10 +42,7 @@ export async function useCatchupServerLogic(squirrel: Squirrel, data: VQuery, op
 
     logger.debug("CATCHUP", "[V-SQR-15-03] Using catchup server:", catchup.id);
 
-    const client = new ValtheraRemote({
-        ...squirrel.authConfig,
-        url: catchup.host
-    });
+    const client = squirrel.getClient(catchup.host);
 
     const addResult = await client.add<CatchupEntry>({
         collection: "__squirrel_catchup",

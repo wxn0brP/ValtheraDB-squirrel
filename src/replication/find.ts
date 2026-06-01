@@ -1,4 +1,3 @@
-import { ValtheraRemote } from "@wxn0brp/db-client";
 import { Data } from "@wxn0brp/db-core/types/data";
 import { VQueryT } from "@wxn0brp/db-core/types/query";
 import { fullScanReq } from "../router/fullScan";
@@ -91,10 +90,7 @@ async function findGetData(squirrel: Squirrel, query: VQueryT.Find, id: string) 
         const responses: Data[] = [];
         for (const server of replicas) {
             try {
-                const client = new ValtheraRemote({
-                    ...squirrel.authConfig,
-                    url: server.host
-                });
+                const client = squirrel.getClient(server.host);
 
                 const res = await client.find(query);
                 if (res.length) responses.push(...res);
