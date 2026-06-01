@@ -65,14 +65,18 @@ async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data
 
     if (!id) {
         logger.debug("ROUTER", "[V-SQR-06-02] No id in query, checking full scan");
+
         if (squirrel.config.allowFullScan) {
             logger.debug("ROUTER", "[V-SQR-06-03] Starting full scan");
-            return fullScanReq(
-                squirrel,
-                data as any,
-                op,
-                res
-            );
+
+            return {
+                err: false,
+                result: await fullScanReq(
+                    squirrel,
+                    data as any,
+                    op
+                )
+            }
         }
         logger.warn("ROUTER", "[V-SQR-06-04] Full scan not allowed");
         return res.status(400).json({ err: true, msg: "Missing id" });

@@ -103,7 +103,7 @@ async function findGetData(squirrel: Squirrel, query: VQueryT.Find, id: string) 
         return responses;
     } else {
         logger.debug("REPLICATION", "[V-SQR-12-05] no id, using fullScanReq");
-        let data: Data[] = await fullScanReq(squirrel, query, "find", false);
+        let data: Data[] = await fullScanReq(squirrel, query, "find");
         data = data.flat();
         logger.debug("REPLICATION", "[V-SQR-12-06] fullScan returned", data.length, "results");
         return data;

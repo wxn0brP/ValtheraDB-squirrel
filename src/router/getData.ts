@@ -34,7 +34,7 @@ export function registerGetData(squirrel: Squirrel) {
             search: {
                 to: _id
             }
-        }, "find", false);
+        }, "find");
 
         data.sort((a, b) => a.time - b.time);
 
@@ -48,7 +48,7 @@ export function registerGetData(squirrel: Squirrel) {
             search: {
                 to: _id
             }
-        }, "remove", false);
+        }, "remove");
 
         return res.json({ err: false });
     });
