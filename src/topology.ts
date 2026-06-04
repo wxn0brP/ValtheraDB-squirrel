@@ -133,15 +133,19 @@ export class TopologyManager {
             const catchupId = epoch.serverIds[idx];
             if (catchupId !== excludedId) {
                 const catchup = this.servers.get(catchupId);
-                logger.debug("TOPOLOGY", "[V-SQR-04-02] Checking catchup candidate:", catchupId);
+                if (!catchup) {
+                    logger.warn("TOPOLOGY", "[V-SQR-04-02] Catchup server missing from topology:", catchupId);
+                    continue;
+                }
+                logger.debug("TOPOLOGY", "[V-SQR-04-03] Checking catchup candidate:", catchupId);
                 const isUp = await this.isServerUp(catchup.host);
                 if (isUp) {
-                    logger.info("TOPOLOGY", "[V-SQR-04-03] Found catchup server:", catchupId);
+                    logger.info("TOPOLOGY", "[V-SQR-04-04] Found catchup server:", catchupId);
                     return catchup;
                 }
             }
         }
-        logger.warn("TOPOLOGY", "[V-SQR-04-04] No catchup server found for excluded:", excludedId);
+        logger.warn("TOPOLOGY", "[V-SQR-04-05] No catchup server found for excluded:", excludedId);
         return null;
     }
 

@@ -25,7 +25,7 @@ export function registerDbOp(squirrel: Squirrel) {
     app.post("/", createHandler(req => req.body.op));
 }
 
-async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data: VQuery, op: string) {
+export async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data: VQuery, op: string) {
     if (!op)
         return res.json({ err: true, msg: "No op specified" });
 
@@ -39,7 +39,7 @@ async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data
     logger.debug("ROUTER", "[V-SQR-06-01] id:", id);
 
     if (squirrel.config.replicationEnabled) {
-        switch (req.params.op) {
+        switch (op) {
             case "findOne":
                 return {
                     err: false,
@@ -58,7 +58,7 @@ async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFResponse, data
             default:
                 return {
                     err: false,
-                    result: await replicationOther(squirrel, req.params.op, id, data as any)
+                    result: await replicationOther(squirrel, op, id, data as any)
                 }
         }
     }

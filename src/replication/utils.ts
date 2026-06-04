@@ -2,9 +2,14 @@ import { Squirrel } from "../squirrel";
 import { logger } from "../logger";
 
 export function getReplicaServers(squirrel: Squirrel, id: string) {
-    const { epoch, idx } = squirrel.topology.getServerForId(id);
+    const target = squirrel.topology.getServerForId(id);
+    if (!target) return [];
+
+    const { epoch, idx } = target;
     const serversIds = selectServers(epoch.serverIds, idx, squirrel.config.replicationFactor);
-    return serversIds.map(id => squirrel.topology.servers.get(id));
+    return serversIds
+        .map(id => squirrel.topology.servers.get(id))
+        .filter(Boolean);
 }
 
 function selectServers(servers: string[], idx: number, required: number): string[] {

@@ -1,4 +1,5 @@
 import { ValtheraRemote } from "@wxn0brp/db-client";
+import type { ValtheraCompatible } from "@wxn0brp/db-core/types/valthera";
 import { Router } from "@wxn0brp/falcon-frame";
 import { logger } from "./logger";
 import { registerGetData } from "./router/getData";
@@ -6,15 +7,23 @@ import { registerDbOp } from "./router/op";
 import { TopologyManager } from "./topology";
 import { AuthConfig, SquirrelConfig } from "./types";
 
+export type SquirrelClientProvider = (host: string, authConfig: AuthConfig) => ValtheraCompatible;
+
 export class Squirrel {
     topology = new TopologyManager(this);
     _ready = false;
-    clients = new Map<string, ValtheraRemote>();
+    clients = new Map<string, ValtheraCompatible>();
 
     constructor(
         public app: Router,
         public authConfig: AuthConfig,
-        public config: SquirrelConfig
+        public config: SquirrelConfig,
+        public clientProvider: SquirrelClientProvider =
+            (host, authConfig) =>
+                new ValtheraRemote({
+                    ...authConfig,
+                    url: host
+                })
     ) {
         this.setupRoutes();
         this.config = {
@@ -26,12 +35,9 @@ export class Squirrel {
         }
     }
 
-    getClient(host: string): ValtheraRemote {
+    getClient(host: string) {
         if (!this.clients.has(host)) {
-            this.clients.set(host, new ValtheraRemote({
-                ...this.authConfig,
-                url: host
-            }));
+            this.clients.set(host, this.clientProvider(host, this.authConfig));
         }
         return this.clients.get(host);
     }

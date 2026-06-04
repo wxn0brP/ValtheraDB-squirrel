@@ -10,46 +10,46 @@ export function registerGetData(squirrel: Squirrel) {
         return;
     }
 
-    squirrel.app.post("/squirrel/welcome-back", async (req, res) => {
-        const { _id } = req.body;
+    squirrel.app.post("/squirrel/welcome-back", (req, res) => welcomeBack(squirrel, req.body._id));
+}
 
-        if (!_id)
-            return res.json({ err: true, msg: "Missing id" });
+export async function welcomeBack(squirrel: Squirrel, _id: string) {
+    if (!_id)
+        return { err: true, msg: "Missing id" };
 
-        logger.info("SYNC", "[V-SQR-16-07] Welcome-back request for server:", _id);
+    logger.info("SYNC", "[V-SQR-16-07] Welcome-back request for server:", _id);
 
-        const host = squirrel.topology.servers.get(_id)?.host;
+    const host = squirrel.topology.servers.get(_id)?.host;
 
-        if (!host)
-            return res.json({ err: true, msg: "Server not found" });
+    if (!host)
+        return { err: true, msg: "Server not found" };
 
-        const isUp = await squirrel.topology.isServerUp(host);
-        if (!isUp) {
-            logger.warn("SYNC", "[V-SQR-16-08] Lie. Server down, skipping:", _id);
-            return res.json({ err: true, msg: "Server down" });
+    const isUp = await squirrel.topology.isServerUp(host);
+    if (!isUp) {
+        logger.warn("SYNC", "[V-SQR-16-08] Lie. Server down, skipping:", _id);
+        return { err: true, msg: "Server down" };
+    }
+
+    const data: CatchupEntry[] = await fullScanReq(squirrel, {
+        collection: COLLECTIONS.SQUIRREL_CATCHUP,
+        search: {
+            to: _id
         }
+    }, "find");
 
-        const data: CatchupEntry[] = await fullScanReq(squirrel, {
-            collection: COLLECTIONS.SQUIRREL_CATCHUP,
-            search: {
-                to: _id
-            }
-        }, "find");
+    data.sort((a, b) => a.time - b.time);
 
-        data.sort((a, b) => a.time - b.time);
+    const client = squirrel.getClient(host);
 
-        const client = squirrel.getClient(host);
+    for (const d of data)
+        await client[d.op](d.v);
 
-        for (const d of data)
-            await client[d.op](d.v);
+    await fullScanReq(squirrel, {
+        collection: COLLECTIONS.SQUIRREL_CATCHUP,
+        search: {
+            to: _id
+        }
+    }, "remove");
 
-        await fullScanReq(squirrel, {
-            collection: COLLECTIONS.SQUIRREL_CATCHUP,
-            search: {
-                to: _id
-            }
-        }, "remove");
-
-        return res.json({ err: false });
-    });
+    return { err: false };
 }
