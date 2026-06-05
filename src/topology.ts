@@ -128,8 +128,11 @@ export class TopologyManager {
 
     async getCatchupServer(excludedId: string, epoch: Epoch) {
         logger.info("TOPOLOGY", "[V-SQR-04-01] Searching for catchup server, excluding:", excludedId);
+        const excludedIdx = epoch.serverIds.indexOf(excludedId);
+        const startIdx = excludedIdx >= 0 ? excludedIdx : this._hash(excludedId) % epoch.serverIds.length;
+
         for (let i = 1; i < epoch.serverIds.length; i++) {
-            const idx = (this._hash(excludedId) + i) % epoch.serverIds.length;
+            const idx = (startIdx + i) % epoch.serverIds.length;
             const catchupId = epoch.serverIds[idx];
             if (catchupId !== excludedId) {
                 const catchup = this.servers.get(catchupId);

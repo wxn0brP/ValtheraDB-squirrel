@@ -41,15 +41,34 @@ export async function welcomeBack(squirrel: Squirrel, _id: string) {
 
     const client = squirrel.getClient(host);
 
-    for (const d of data)
-        await client[d.op](d.v);
+    const replayed: CatchupEntry[] = [];
 
-    await fullScanReq(squirrel, {
-        collection: COLLECTIONS.SQUIRREL_CATCHUP,
-        search: {
-            to: _id
+    for (const d of data) {
+        try {
+            await client[d.op](d.v);
+            replayed.push(d);
+        } catch (e) {
+            await removeCatchupEntries(squirrel, replayed, _id);
+            return { err: true, msg: e.message };
         }
-    }, "remove");
+    }
+
+    await removeCatchupEntries(squirrel, data, _id);
 
     return { err: false };
+}
+
+async function removeCatchupEntries(squirrel: Squirrel, data: CatchupEntry[], to: string) {
+    const withId = data.filter(d => "_id" in d);
+    if (!withId.length) return;
+
+    for (const d of withId) {
+        await fullScanReq(squirrel, {
+            collection: COLLECTIONS.SQUIRREL_CATCHUP,
+            search: {
+                _id: (d as any)._id,
+                to,
+            }
+        }, "remove");
+    }
 }

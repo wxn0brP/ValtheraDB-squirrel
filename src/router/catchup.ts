@@ -45,16 +45,22 @@ export async function useCatchupServerLogic(squirrel: Squirrel, data: VQuery, op
 
     const client = squirrel.getClient(catchup.host);
 
-    const addResult = await client.add<CatchupEntry>({
-        collection: COLLECTIONS.SQUIRREL_CATCHUP,
-        data: {
-            to: serverId,
-            op: op,
-            v: data,
-            time: Date.now()
-        }
-    });
+    let addResult: CatchupEntry;
+    try {
+        addResult = await client.add<CatchupEntry>({
+            collection: COLLECTIONS.SQUIRREL_CATCHUP,
+            data: {
+                to: serverId,
+                op: op,
+                v: data,
+                time: Date.now()
+            }
+        });
+    } catch (e) {
+        logger.error("CATCHUP", "[V-SQR-15-04] Failed to add to catchup server:", catchup.id, e.message);
+        return { err: true, msg: e.message };
+    }
 
-    logger.info("CATCHUP", "[V-SQR-15-04] Successfully added to catchup server:", serverId, addResult);
+    logger.info("CATCHUP", "[V-SQR-15-05] Successfully added to catchup server:", serverId, addResult);
     return addResult;
 }
