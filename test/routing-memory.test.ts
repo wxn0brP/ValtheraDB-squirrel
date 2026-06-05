@@ -105,7 +105,26 @@ describe("memory routing", () => {
         expect(res.body).toEqual({ err: true, msg: "Search function is not supported" });
     });
 
-    test("6. uses body op in replication mode when route params are empty", async () => {
+    test("6. uses redirectHost for redirect when set", async () => {
+        const cluster = createMemoryCluster(["a", "b", "c"], { replicationEnabled: false });
+        const id = cluster.findIdForIndex(1);
+        const server = cluster.squirrel.topology.servers.get("b");
+        server.redirectHost = "https://domain.com";
+        const res = createResponse();
+
+        await useDbOp(
+            cluster.squirrel,
+            { params: { op: "add" }, body: {} } as any,
+            res as any,
+            { collection: "items", data: { _id: id, value: "ok" } },
+            "add"
+        );
+
+        expect(res.statusCode).toBe(HTTP_STATUS.TEMPORARY_REDIRECT);
+        expect(res.redirectUrl).toBe("https://domain.com/db/add");
+    });
+
+    test("7. uses body op in replication mode when route params are empty", async () => {
         const cluster = createMemoryCluster(["a", "b"], {
             replicationEnabled: true,
             replicationFactor: 2,

@@ -30,7 +30,7 @@ When no `_id` is present and `SQUIRREL_ALLOW_FULL_SCAN=true`, Squirrel broadcast
 |----------|----------|---------|-------------|
 | `SQUIRREL_DB` | Yes | - | Database name |
 | `SQUIRREL_AUTH` | Yes | - | Auth token |
-| `SQUIRREL_SEEDS` | Yes | - | Space-separated seed URLs (`http://<server-id>@<host>:<port>`) |
+| `SQUIRREL_SEEDS` | Yes | - | Space-separated seed URLs (`http://<server-id>:<redirect-host>@<host>:<port>`) |
 | `SQUIRREL_ALLOW_FULL_SCAN` | No | `false` | Query without `_id`, broadcast to all servers |
 | `SQUIRREL_ALLOW_CATCHUP_SERVER` | No | `false` | Queue writes on catchup when primary is down |
 

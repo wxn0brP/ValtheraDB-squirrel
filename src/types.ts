@@ -1,6 +1,7 @@
 export interface ServerInfo {
     id: string;
     host: string;
+    redirectHost?: string;
 }
 
 export interface Epoch {

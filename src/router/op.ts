@@ -110,7 +110,7 @@ export async function useDbOp(squirrel: Squirrel, req: FFRequest, res: FFRespons
         }
     }
 
-    const host = target.server.host;
+    const host = target.server.redirectHost || target.server.host;
     const redirectUrl = `${host.endsWith("/") ? host : host + "/"}db/${op}`;
     logger.debug("ROUTER", "[V-SQR-06-09] redirect:", redirectUrl);
     res.redirect(redirectUrl, HTTP_STATUS.TEMPORARY_REDIRECT);
