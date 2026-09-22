@@ -1,0 +1,41 @@
+{
+  "name": "@wxn0brp/db-squirrel",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wxn0brP/ValtheraDB-squirrel.git"
+  },
+  "homepage": "https://github.com/wxn0brP/ValtheraDB-squirrel",
+  "author": "wxn0brP",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@wxn0brp/db-client": "^0.120.0",
+    "@wxn0brp/db-core": "^0.12.3",
+    "@wxn0brp/falcon-frame": "^0.9.3"
+  },
+  "devDependencies": {
+    "@types/bun": "*",
+    "@wxn0brp/biome": "*",
+    "tsc-alias": "^1",
+    "typescript": "^7"
+  },
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    }
+  }
+}
