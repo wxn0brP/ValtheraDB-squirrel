@@ -2,7 +2,7 @@ import { ValtheraRemote } from "@wxn0brp/db-client";
 import type { ValtheraCompatible } from "@wxn0brp/db-core/types/valthera";
 import { Router } from "@wxn0brp/falcon-frame";
 import { logger } from "./logger";
-import { registerGetData } from "./router/getData";
+import { registerGetData, welcomeBack } from "./router/getData";
 import { registerDbOp } from "./router/op";
 import { TopologyManager } from "./topology";
 import { AuthConfig, SquirrelConfig } from "./types";
@@ -31,6 +31,7 @@ export class Squirrel {
             allowFullScan: true,
             replicationEnabled: false,
             replicationFactor: 3,
+            autoSyncOnStartup: true,
             ...this.config
         }
     }
@@ -52,6 +53,29 @@ export class Squirrel {
         }
 
         this._ready = true;
+
+        if (this.config.autoSyncOnStartup) {
+            await this.syncUpServers();
+        }
+    }
+
+    async syncUpServers() {
+        logger.info("SYNC", "[V-SQR-09-10] Starting auto-sync for up servers");
+        for (const [serverId, server] of this.topology.servers) {
+            const isUp = await this.topology.isServerUp(server.host);
+            if (isUp) {
+                logger.info("SYNC", "[V-SQR-09-11] Server is up, syncing:", serverId);
+                const result = await welcomeBack(this, serverId);
+                if (result.err) {
+                    logger.warn("SYNC", "[V-SQR-09-12] Sync failed for server:", serverId, result.msg);
+                } else {
+                    logger.info("SYNC", "[V-SQR-09-13] Sync completed for server:", serverId);
+                }
+            } else {
+                logger.debug("SYNC", "[V-SQR-09-14] Server is down, skipping:", serverId);
+            }
+        }
+        logger.info("SYNC", "[V-SQR-09-15] Auto-sync completed");
     }
 
     setupRoutes() {

@@ -24,6 +24,7 @@ export interface SquirrelConfig {
     allowCatchupServer?: boolean;
     replicationEnabled?: boolean;
     replicationFactor?: number;
+    autoSyncOnStartup?: boolean;
 }
 
 export interface ServerEpochInfo {
