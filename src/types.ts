@@ -1,41 +1,41 @@
 export interface ServerInfo {
-    id: string;
-    host: string;
-    redirectHost?: string;
+	id: string;
+	host: string;
+	redirectHost?: string;
 }
 
 export interface Epoch {
-    start: number;
-    serverIds: string[];
+	start: number;
+	serverIds: string[];
 }
 
 export interface SquirrelConfigDbEntry {
-    _id: "server" | "epoch";
-    v: string;
+	_id: "server" | "epoch";
+	v: string;
 }
 
 export interface AuthConfig {
-    name: string;
-    auth: string;
+	name: string;
+	auth: string;
 }
 
 export interface SquirrelConfig {
-    allowFullScan?: boolean;
-    allowCatchupServer?: boolean;
-    replicationEnabled?: boolean;
-    replicationFactor?: number;
-    autoSyncOnStartup?: boolean;
+	allowFullScan?: boolean;
+	allowCatchupServer?: boolean;
+	replicationEnabled?: boolean;
+	replicationFactor?: number;
+	autoSyncOnStartup?: boolean;
 }
 
 export interface ServerEpochInfo {
-    server: ServerInfo;
-    epoch: Epoch;
-    idx: number;
+	server: ServerInfo;
+	epoch: Epoch;
+	idx: number;
 }
 
 export interface CatchupEntry {
-    to: string;
-    v: any;
-    time: number;
-    op: string;
+	to: string;
+	v: any;
+	time: number;
+	op: string;
 }

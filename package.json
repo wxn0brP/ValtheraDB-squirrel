@@ -24,6 +24,7 @@
     },
     "devDependencies": {
         "@types/bun": "*",
+        "@wxn0brp/biome": "*",
         "tsc-alias": "^1",
         "typescript": "^6"
     },
