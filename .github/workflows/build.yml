@@ -1,25 +1,52 @@
-name: Build
+name: Build and publish Docker image
 
 on:
   push:
     branches:
       - master
-    tags:
-      - "*"
 
   workflow_dispatch:
 
 concurrency:
-  group: build
+  group: build-docker
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  docker:
     runs-on: ubuntu-latest
+
     permissions:
-      contents: write
-      id-token: write
+      contents: read
+      packages: write
+
     steps:
-      - uses: wxn0brP/rusalka@master
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/wxn0brp/valtheradb-squirrel:latest
+            ghcr.io/wxn0brp/valtheradb-squirrel:${{ github.sha }}
+            wxn0brp/valtheradb-squirrel:latest
+            wxn0brp/valtheradb-squirrel:${{ github.sha }}
