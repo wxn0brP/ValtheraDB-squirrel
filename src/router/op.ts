@@ -6,7 +6,7 @@ import { replicationOther } from "../replication/other";
 import { Squirrel } from "../squirrel";
 import { COLLECTION_OPS, HTTP_STATUS } from "../vars";
 import { useCatchupServer } from "./catchup";
-import { fullScanReq } from "./fullScan";
+import { fullScanCollectionOp, fullScanReq } from "./fullScan";
 
 function getQuery(req: FFRequest): VQuery {
 	return req.body.query || req.body.params?.[0];
@@ -46,8 +46,6 @@ export async function useDbOp(
 			msg: "No op specified",
 		});
 
-	if (COLLECTION_OPS.has(op)) return fullScanReq(squirrel, data, op);
-
 	if (!data || typeof data !== "object" || Array.isArray(data))
 		return res.json({
 			err: true,
@@ -59,6 +57,14 @@ export async function useDbOp(
 			err: true,
 			msg: "Search function is not supported",
 		});
+
+	if (COLLECTION_OPS.has(op)) {
+		const res = await fullScanCollectionOp(squirrel, data, op);
+		return {
+			err: false,
+			result: res,
+		};
+	}
 
 	const id = data.data?._id || data.search?._id;
 	logger.debug("ROUTER", "[V-SQR-06-01] id:", id);

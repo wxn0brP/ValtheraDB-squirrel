@@ -150,6 +150,7 @@ async function findGetData(
 			"[V-SQR-12-04] total responses:",
 			responses.length,
 		);
+
 		return responses;
 	} else {
 		logger.debug("REPLICATION", "[V-SQR-12-05] no id, using fullScanReq");

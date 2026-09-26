@@ -1,7 +1,6 @@
 import type { VQuery } from "@wxn0brp/db-core/types/query";
-import { Squirrel } from "../squirrel";
 import { logger } from "../logger";
-import { COLLECTION_OPS } from "../vars";
+import { Squirrel } from "../squirrel";
 
 export async function fullScanReq(
 	squirrel: Squirrel,
@@ -12,9 +11,6 @@ export async function fullScanReq(
 		...squirrel.topology.servers.entries(),
 	];
 	servers.sort((a, b) => a[0].localeCompare(b[0]));
-
-	if (COLLECTION_OPS.has(op))
-		return fullScanCollectionOp(squirrel, data, op, servers);
 
 	const findResult = [];
 
@@ -75,23 +71,38 @@ export async function fullScanReq(
 	return responseData;
 }
 
-async function fullScanCollectionOp(
+export async function fullScanCollectionOp(
 	squirrel: Squirrel,
 	data: VQuery,
 	op: string,
-	servers: [
-		string,
-		any,
-	][],
 ) {
-	const collection = data.collection as string;
+	const servers = [
+		...squirrel.topology.servers.entries(),
+	];
+	servers.sort((a, b) => a[0].localeCompare(b[0]));
+	const { collection } = data;
+
+	logger.info(
+		"FULLSCAN",
+		"[V-SQR-07-06] Full scan collection op:",
+		op,
+		"collection:",
+		collection,
+	);
 
 	switch (op) {
 		case "getCollections": {
 			const allCollections = new Set<string>();
 			for (const [serverId, server] of servers) {
 				const isUp = await squirrel.topology.isServerUp(server.host);
-				if (!isUp) continue;
+				if (!isUp) {
+					logger.warn(
+						"FULLSCAN",
+						"[V-SQR-07-07] Server down, skipping:",
+						serverId,
+					);
+					continue;
+				}
 				const client = squirrel.getClient(server.host);
 				const collections = await client.getCollections();
 				for (const c of collections) {
@@ -106,7 +117,14 @@ async function fullScanCollectionOp(
 		case "ensureCollection": {
 			for (const [serverId, server] of servers) {
 				const isUp = await squirrel.topology.isServerUp(server.host);
-				if (!isUp) continue;
+				if (!isUp) {
+					logger.warn(
+						"FULLSCAN",
+						"[V-SQR-07-08] Server down, skipping:",
+						serverId,
+					);
+					continue;
+				}
 				const client = squirrel.getClient(server.host);
 				await client.ensureCollection(collection);
 			}
@@ -116,7 +134,15 @@ async function fullScanCollectionOp(
 		case "removeCollection": {
 			for (const [serverId, server] of servers) {
 				const isUp = await squirrel.topology.isServerUp(server.host);
-				if (!isUp) continue;
+				if (!isUp) {
+					logger.warn(
+						"FULLSCAN",
+						"[V-SQR-07-09] Server down, skipping:",
+						serverId,
+					);
+					continue;
+				}
+				console.log("ok", server.host);
 				const client = squirrel.getClient(server.host);
 				await client.removeCollection(collection);
 			}
@@ -126,7 +152,14 @@ async function fullScanCollectionOp(
 		case "issetCollection": {
 			for (const [serverId, server] of servers) {
 				const isUp = await squirrel.topology.isServerUp(server.host);
-				if (!isUp) continue;
+				if (!isUp) {
+					logger.warn(
+						"FULLSCAN",
+						"[V-SQR-07-10] Server down, skipping:",
+						serverId,
+					);
+					continue;
+				}
 				const client = squirrel.getClient(server.host);
 				const exists = await client.issetCollection(collection);
 				if (exists) return true;
@@ -135,6 +168,7 @@ async function fullScanCollectionOp(
 		}
 
 		default:
+			logger.error("FULLSCAN", "[V-SQR-07-11] Unknown collection op:", op);
 			return null;
 	}
 }

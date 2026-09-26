@@ -6,12 +6,13 @@ import { Squirrel } from "../squirrel";
 import { ServerInfo } from "../types";
 import { squirrelTimeKey } from "../vars";
 import { getReplicaServers } from "./utils";
+import { genId } from "@wxn0brp/db-core";
 
 export async function replicationOther(
 	squirrel: Squirrel,
 	op: string,
 	id: string,
-	data: VQuery,
+	data: VQuery<Data, false>,
 ) {
 	logger.debug(
 		"REPLICATION",
@@ -48,6 +49,28 @@ export async function replicationOther(
 		"to data/updater",
 	);
 
+	if (data.data && !data.data._id) {
+		const id = genId();
+		logger.warn(
+			"REPLICATION",
+			"[V-SQR-13-05] no _id in data, generating one:",
+			id,
+		);
+		data.data._id = id;
+	}
+
+	if (data.add_arg && data.updater && data.search) {
+		if (!data.add_arg._id && !data.search._id && !data.updater._id) {
+			const id = genId();
+			logger.warn(
+				"REPLICATION",
+				"[V-SQR-13-06] no _id in add_arg/search/updater, generating one:",
+				id,
+			);
+			data.add_arg._id = id;
+		}
+	}
+
 	let responses: Data[] = [];
 	const missing: ServerInfo[] = [];
 	for (const server of servers) {
@@ -55,7 +78,7 @@ export async function replicationOther(
 			const client = squirrel.getClient(server.host);
 			logger.debug(
 				"REPLICATION",
-				"[V-SQR-13-05] calling",
+				"[V-SQR-13-10] calling",
 				op,
 				"on",
 				server.host,
@@ -65,7 +88,7 @@ export async function replicationOther(
 		} catch (e) {
 			logger.error(
 				"REPLICATION",
-				"[V-SQR-13-06] error querying",
+				"[V-SQR-13-11] error querying",
 				server.host,
 				":",
 				e.message,
@@ -88,7 +111,7 @@ export async function replicationOther(
 			if ("err" in result)
 				logger.warn(
 					"REPLICATION",
-					"[V-SQR-13-08] catchup failed for",
+					"[V-SQR-13-15] catchup failed for",
 					miss.id,
 					":",
 					result.msg,
@@ -98,7 +121,7 @@ export async function replicationOther(
 
 	logger.debug(
 		"REPLICATION",
-		"[V-SQR-13-07] returning",
+		"[V-SQR-13-16] returning",
 		responses.length,
 		"responses",
 	);

@@ -2,6 +2,7 @@ import FalconFrame from "@wxn0brp/falcon-frame";
 import { Squirrel } from "./squirrel";
 
 const app = new FalconFrame();
+app.setOrigin("*");
 app.l(14415);
 
 const squirrel = new Squirrel(
