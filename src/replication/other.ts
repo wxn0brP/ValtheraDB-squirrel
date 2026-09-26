@@ -20,6 +20,7 @@ export async function replicationOther(
 		"id:",
 		id,
 	);
+
 	let servers: ServerInfo[] = [];
 	if (id) {
 		servers = getReplicaServers(squirrel, id);
@@ -105,11 +106,11 @@ export async function replicationOther(
 	if (!responses.length) return op.includes("One") ? undefined : [];
 
 	if (op.includes("One") || op === "add") {
-		delete responses[0][squirrelTimeKey];
+		if (responses[0]) delete responses[0][squirrelTimeKey];
 		return responses[0];
 	} else
 		return responses.map(d => {
-			delete d[squirrelTimeKey];
+			if (d) delete d[squirrelTimeKey];
 			return d;
 		});
 }

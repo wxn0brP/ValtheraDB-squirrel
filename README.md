@@ -24,6 +24,17 @@ When the primary server is down, writes are queued on a catchup node in `__squir
 
 When no `_id` is present and `SQUIRREL_ALLOW_FULL_SCAN=true`, Squirrel broadcasts the operation to all servers.
 
+### Collection Operations
+
+Collection operations (`getCollections`, `ensureCollection`, `removeCollection`, `issetCollection`) are special cases that operate on collections rather than documents. They never have an `_id` and always require full scan.
+
+| Operation | Behavior |
+|-----------|----------|
+| `getCollections` | Aggregates collection names from all servers, returns deduplicated list |
+| `ensureCollection` | Creates the collection on all servers |
+| `removeCollection` | Removes the collection from all servers |
+| `issetCollection` | Returns `true` if the collection exists on any server |
+
 ## Configuration
 
 | Variable | Required | Default | Description |

@@ -5,6 +5,13 @@ export const COLLECTIONS = {
 	SQUIRREL_CATCHUP: "__squirrel_catchup",
 };
 
+export const COLLECTION_OPS = new Set([
+	"getCollections",
+	"ensureCollection",
+	"issetCollection",
+	"removeCollection",
+]);
+
 export const TIMEOUTS = {
 	SERVER_CHECK: 1500,
 };

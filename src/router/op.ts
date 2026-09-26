@@ -4,7 +4,7 @@ import { logger } from "../logger";
 import { replicationFind, replicationFindOne } from "../replication/find";
 import { replicationOther } from "../replication/other";
 import { Squirrel } from "../squirrel";
-import { HTTP_STATUS } from "../vars";
+import { COLLECTION_OPS, HTTP_STATUS } from "../vars";
 import { useCatchupServer } from "./catchup";
 import { fullScanReq } from "./fullScan";
 
@@ -46,6 +46,8 @@ export async function useDbOp(
 			msg: "No op specified",
 		});
 
+	if (COLLECTION_OPS.has(op)) return fullScanReq(squirrel, data, op);
+
 	if (!data || typeof data !== "object" || Array.isArray(data))
 		return res.json({
 			err: true,
@@ -73,11 +75,6 @@ export async function useDbOp(
 					err: false,
 					result: await replicationFind(squirrel, id, data as any),
 				};
-			case "issetCollection":
-			case "getCollections":
-			case "ensureCollection":
-			case "removeCollection":
-				break;
 			default:
 				return {
 					err: false,

@@ -8,7 +8,7 @@ describe("parseServerInfo", () => {
 		).toEqual({
 			id: "node-a",
 			host: "http://example.com:14415/db?x=1#top",
-			redirectHost: "secret",
+			redirectHost: "https://secret",
 		});
 	});
 
